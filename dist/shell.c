@@ -52,11 +52,6 @@
 #endif
 #include <ctype.h>
 #include <stdarg.h>
-// Begin Android Add
-#ifndef NO_ANDROID_FUNCS
-#include <sqlite3_android.h>
-#endif
-// End Android Add
 
 #if !defined(_WIN32) && !defined(WIN32)
 # include <signal.h>
@@ -1943,21 +1938,6 @@ static void open_db(ShellState *p, int keepAlive){
                             readfileFunc, 0, 0);
     sqlite3_create_function(p->db, "writefile", 2, SQLITE_UTF8, 0,
                             writefileFunc, 0, 0);
-
-    // Begin Android Add
-    #ifndef NO_ANDROID_FUNCS
-        int err = register_localized_collators(p->db, "en_US", 0);
-        if (err != SQLITE_OK) {
-          fprintf(stderr, "register_localized_collators() failed\n");
-          exit(1);
-        }
-        err = register_android_functions(p->db, 0);
-        if (err != SQLITE_OK) {
-          fprintf(stderr, "register_android_functions() failed\n");
-          exit(1);
-        }
-    #endif
-    // End Android Add
   }
 }
 
@@ -3278,7 +3258,8 @@ static int do_meta_command(char *zLine, ShellState *p){
         goto meta_command_exit;
       }
       if( nArg==3 ){
-        sqlite3_limit(p->db, aLimit[iLimit].limitCode, integerValue(azArg[2]));
+        sqlite3_limit(p->db, aLimit[iLimit].limitCode,
+                      (int)integerValue(azArg[2]));
       }
       printf("%20s %d\n", aLimit[iLimit].zLimitName,
              sqlite3_limit(p->db, aLimit[iLimit].limitCode, -1));
